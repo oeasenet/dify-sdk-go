@@ -17,6 +17,40 @@ type ChatMessageStreamResponse struct {
 	Answer         string `json:"answer"`
 	CreatedAt      int64  `json:"created_at"`
 	ConversationID string `json:"conversation_id"`
+	Type           string `json:"type"`
+	BelongsTo      string `json:"belongs_to"`
+	Url            string `json:"url"`
+	Audio          string `json:"audio"`
+	WorkflowRunId  string `json:"workflow_run_id"`
+	Metadata       struct {
+		Usage              interface{}   `json:"usage"`
+		RetrieverResources []interface{} `json:"retriever_resources"`
+	} `json:"metadata"`
+	Data struct {
+		Id                string      `json:"id"`
+		CreatedAt         int64       `json:"created_at"`
+		FinishedAt        int64       `json:"finished_at"`
+		WorkflowId        string      `json:"workflow_id"`
+		SequenceNumber    int         `json:"sequence_number"`
+		NodeId            string      `json:"node_id"`
+		NodeType          string      `json:"node_type"`
+		Title             string      `json:"title"`
+		Index             int         `json:"index"`
+		PredecessorNodeId string      `json:"predecessor_node_id"`
+		ProcessData       string      `json:"process_data"`
+		Status            string      `json:"status"`
+		Error             string      `json:"error"`
+		ElapsedTime       float32     `json:"elapsed_time"`
+		Inputs            interface{} `json:"inputs,omitempty"`
+		Outputs           interface{} `json:"outputs"`
+		TotalTokens       int         `json:"total_tokens"`
+		TotalSteps        int         `json:"total_steps"`
+		ExecutionMetadata struct {
+			TotalTokens int     `json:"total_tokens"`
+			TotalPrice  float64 `json:"total_price,omitempty"`
+			Currency    string  `json:"currency,omitempty"`
+		} `json:"execution_metadata"`
+	} `json:"data"`
 }
 
 type ChatMessageStreamChannelResponse struct {
@@ -79,10 +113,11 @@ func (api *API) chatMessagesStreamHandle(ctx context.Context, resp *http.Respons
 					Err: errors.New("error streaming event: " + string(line)),
 				}
 				return
-			} else if resp.Answer == "" {
-				return
 			}
 			streamChannel <- resp
+			if resp.Event == "workflow_finished" {
+				return
+			}
 		}
 	}
 }
